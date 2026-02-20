@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/SwiftDeliver.ApiGateway/SwiftDeliver.ApiGateway.csproj" />
+  <Project Path="src/SwiftDeliver.Services.Orders/SwiftDeliver.Services.Orders.csproj" />
+  <Project Path="src/SwiftDeliver.Services.Tracking/SwiftDeliver.Services.Tracking.csproj" />
+  <Project Path="src/SwiftDeliver.Workers.Notifications/SwiftDeliver.Workers.Notifications.csproj" />
+  <Project Path="src\SwiftDeliver.Services.Auth\SwiftDeliver.Services.Auth.csproj" />
+</Solution>
