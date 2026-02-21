@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  swiftdb:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: swiftdb
+    hostname: swiftdb
+    environment:
+      ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: Mssql_Admin_Pass123!
+    ports:
+      - 11433:1433
+    volumes:
+      - swiftdb_data:/var/opt/mssql
+      - ./swiftdb/init.sql:/init.sql
+      - ./swiftdb/entrypoint.sh:/entrypoint.sh
+    entrypoint: ["/bin/bash", "./entrypoint.sh"]
+    
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    hostname: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq-lib:/var/lib/rabbitmq
+      - rabbitmq-log:/var/log/rabbitmq
+      
+volumes:
+  swiftdb_data:
+    driver: local
+  rabbitmq-lib:
+    driver: local
+  rabbitmq-log:
+    driver: local
+  
