@@ -10,7 +10,7 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-DbMigrator.Migrate(builder.Configuration.GetConnectionString("AuthDb"));
+DbMigrator.Migrate(app.Configuration.GetConnectionString("AuthDb"));
 
 app.UseSerilogRequestLogging();
 
