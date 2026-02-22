@@ -8,9 +8,9 @@ builder.Host.UseSerilog((context, config) =>
 
 builder.Services.AddHttpContextAccessor();
 
-DbMigrator.Migrate(builder.Configuration.GetConnectionString("AuthDb"));
-
 var app = builder.Build();
+
+DbMigrator.Migrate(builder.Configuration.GetConnectionString("AuthDb"));
 
 app.UseSerilogRequestLogging();
 
