@@ -11,7 +11,7 @@ public static class DbMigrator
         try
         {
             var cnx = new SqlConnection(connectionString);
-            var evolve = new Evolve(cnx, msg => Log.Logger.Information(msg))
+            var evolve = new Evolve(cnx)
             {
                 Locations = ["Db/Migrations"],
                 IsEraseDisabled = true,
@@ -21,7 +21,7 @@ public static class DbMigrator
         }
         catch (Exception ex)
         {
-            Log.Logger.Fatal("Database migration failed.", ex);
+            Log.Logger.Fatal(ex, "Database migration failed.");
             throw;
         }
     }
