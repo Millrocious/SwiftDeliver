@@ -6,6 +6,7 @@ CREATE TABLE RefreshTokens (
        REFERENCES Users(Id),
     ExpiresAt DATETIME2 NOT NULL,
     IsRevoked BIT NOT NULL DEFAULT 0,
-    CreatedAt DATETIME2 NOT NULL,
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    UpdatedAt DATETIME2
 )
 

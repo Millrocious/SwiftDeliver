@@ -1,9 +1,9 @@
-INSERT INTO Users(Email, PasswordHash, RoleId, CreatedAt) 
+INSERT INTO Users(Email, PasswordHash, PasswordSalt, RoleId) 
 SELECT 
     'admin@admin.com', 
-    '$2a$12$fSsvHspeVZl7XckMQfDm/usQ8dkld2bS3rrVAk8gASG.GtXQT0lcy',
-    Id,
-    GETDATE()
+    'vaXgOLmvksyQMcGqA4B+E0g7AnDcMbXgWaJhldUp4yk=',
+    'eRdR4YuRgg0ON9+jXFlURA==',
+    Id
 FROM
     Roles r
 WHERE
