@@ -14,7 +14,9 @@ public static class RegisterEndpoint
     }
 
     private static async Task<Results<Ok<RegisterEndpointResponse>, ProblemHttpResult>> Handle(
-        RegisterEndpointCommand command, IMediator mediator)
+        HttpContext httpContext,
+        RegisterEndpointCommand command, 
+        IMediator mediator)
     {
         var res = await mediator.Send(command);
 
@@ -30,6 +32,21 @@ public static class RegisterEndpoint
                 });
         }
         
-        return TypedResults.Ok(res.Value);
+        var accessTokenCookieOptions = new CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddMilliseconds(AuthConstants.AccessTokenExpirationMs),
+            HttpOnly = true,
+        };
+        
+        var refreshTokenCookieOptions = new CookieOptions
+        {
+            Expires = DateTimeOffset.UtcNow.AddMilliseconds(AuthConstants.RefreshTokenExpirationMs),
+            HttpOnly = true,
+        };
+        
+        httpContext.Response.Cookies.Append("accessToken", res.Value.AccessToken, accessTokenCookieOptions);
+        httpContext.Response.Cookies.Append("refreshToken", res.Value.RefreshToken, refreshTokenCookieOptions);
+        
+        return TypedResults.Ok(new RegisterEndpointResponse(res.Value.UserId));
     }
 }

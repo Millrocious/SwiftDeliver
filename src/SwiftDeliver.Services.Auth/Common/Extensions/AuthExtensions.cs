@@ -1,6 +1,8 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using SwiftDeliver.Auth.Common.Interfaces;
+using SwiftDeliver.Auth.Common.Services;
 
 namespace SwiftDeliver.Auth.Common.Extensions;
 
@@ -8,6 +10,8 @@ public static class AuthExtensions
 {
     public static IServiceCollection AddAuth(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddScoped<ITokenGenerator, TokenGenerator>();
+        
         services.AddAuthorization();
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(jwtOptions =>

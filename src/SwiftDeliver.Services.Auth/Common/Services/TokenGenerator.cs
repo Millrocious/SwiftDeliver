@@ -2,11 +2,13 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using SwiftDeliver.Auth.Common.Constants;
+using SwiftDeliver.Auth.Common.Interfaces;
 using SwiftDeliver.Auth.Common.Settings;
 
 namespace SwiftDeliver.Auth.Common.Services;
 
-public class TokenGenerator
+public class TokenGenerator : ITokenGenerator
 {
     private readonly JwtSettings _options;
 
@@ -32,7 +34,7 @@ public class TokenGenerator
            Issuer = _options.Issuer,
            Audience = _options.Audience,
            Claims = claims,
-           Expires = DateTime.UtcNow.AddMinutes(15),
+           Expires = DateTime.UtcNow.AddMilliseconds(AuthConstants.AccessTokenExpirationMs),
            IssuedAt = DateTime.UtcNow,
            NotBefore = DateTime.UtcNow,
            SigningCredentials = new SigningCredentials(symmetricKey, SecurityAlgorithms.HmacSha256Signature)
