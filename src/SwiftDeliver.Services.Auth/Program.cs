@@ -1,6 +1,7 @@
 using Serilog;
 using SwiftDeliver.Auth.Common.Extensions;
 using SwiftDeliver.Auth.Db;
+using SwiftDeliver.Auth.Features.Login;
 using SwiftDeliver.Auth.Features.Register;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,5 +26,6 @@ app.UseSerilogRequestLogging();
 
 app.MapGet("/", () => "Hello World!").RequireAuthorization();
 app.MapRegisterEndpoint();
+app.MapLoginEndpoint();
 
 app.Run();
