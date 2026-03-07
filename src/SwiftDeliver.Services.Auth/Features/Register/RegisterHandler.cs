@@ -9,15 +9,15 @@ using SwiftDeliver.Auth.Common.Interfaces;
 
 namespace SwiftDeliver.Auth.Features.Register;
 
-public class RegisterEndpointHandler : ICommandHandler<RegisterEndpointCommand, Result<RegisterEndpointTokens>>
+public class RegisterHandler : ICommandHandler<RegisterCommand, Result<RegisterTokensDto>>
 {
     private readonly IDbConnection _connection;
-    private readonly ILogger<RegisterEndpointHandler> _logger;
+    private readonly ILogger<RegisterHandler> _logger;
     private readonly ITokenGenerator _tokenGenerator;
 
-    public RegisterEndpointHandler(
+    public RegisterHandler(
         IDbConnection connection, 
-        ILogger<RegisterEndpointHandler> logger, 
+        ILogger<RegisterHandler> logger, 
         ITokenGenerator tokenGenerator)
     {
         _connection = connection;
@@ -25,7 +25,7 @@ public class RegisterEndpointHandler : ICommandHandler<RegisterEndpointCommand, 
         _tokenGenerator = tokenGenerator;
     }
 
-    public async ValueTask<Result<RegisterEndpointTokens>> Handle(RegisterEndpointCommand command,
+    public async ValueTask<Result<RegisterTokensDto>> Handle(RegisterCommand command,
         CancellationToken cancellationToken)
     {
         _connection.Open();
@@ -97,7 +97,7 @@ public class RegisterEndpointHandler : ICommandHandler<RegisterEndpointCommand, 
             
             transaction.Commit();
             
-            return Result.Ok(new RegisterEndpointTokens(createdUserId, accessToken, refreshToken));
+            return Result.Ok(new RegisterTokensDto(createdUserId, accessToken, refreshToken));
         }
         catch (Exception e)
         {

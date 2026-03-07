@@ -7,18 +7,18 @@ using SwiftDeliver.Auth.Common.Interfaces;
 
 namespace SwiftDeliver.Auth.Features.RefreshToken;
 
-public sealed class RefreshTokenEndpointHandler : ICommandHandler<RefreshTokenEndpointCommand, Result<RefreshTokenEndpointTokens>>
+public sealed class RefreshTokenHandler : ICommandHandler<RefreshTokenCommand, Result<RefreshTokenTokens>>
 {
     private readonly IDbConnection _connection;
     private readonly ITokenGenerator _tokenGenerator;
     
-    public RefreshTokenEndpointHandler(IDbConnection connection, ITokenGenerator tokenGenerator)
+    public RefreshTokenHandler(IDbConnection connection, ITokenGenerator tokenGenerator)
     {
         _connection = connection;
         _tokenGenerator = tokenGenerator;
     }
 
-    public async ValueTask<Result<RefreshTokenEndpointTokens>> Handle(RefreshTokenEndpointCommand command, CancellationToken cancellationToken)
+    public async ValueTask<Result<RefreshTokenTokens>> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
     {
         _connection.Open();
         var getRefreshTokenSql = """
@@ -28,7 +28,7 @@ public sealed class RefreshTokenEndpointHandler : ICommandHandler<RefreshTokenEn
                                  WHERE rt.Token = @Token
                                  """;
 
-        var result = await _connection.QuerySingleOrDefaultAsync<RefreshTokenEndpointUserDto>(
+        var result = await _connection.QuerySingleOrDefaultAsync<RefreshTokenUserDto>(
             getRefreshTokenSql,
             new { Token = command.RefreshToken });
 
@@ -71,7 +71,7 @@ public sealed class RefreshTokenEndpointHandler : ICommandHandler<RefreshTokenEn
         
             transaction.Commit();
             
-            return Result.Ok(new RefreshTokenEndpointTokens(newAccessToken, newRefreshToken));
+            return Result.Ok(new RefreshTokenTokens(newAccessToken, newRefreshToken));
         }
         catch (Exception e)
         {

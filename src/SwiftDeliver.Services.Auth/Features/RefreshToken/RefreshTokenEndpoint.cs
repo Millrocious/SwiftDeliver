@@ -28,7 +28,7 @@ public static class RefreshTokenEndpoint
                 instance: $"{httpContext.Request.Method} {httpContext.Request.Path}");
         }
         
-        var result = await mediator.Send(new RefreshTokenEndpointCommand(refreshToken));
+        var result = await mediator.Send(new RefreshTokenCommand(refreshToken));
         
         if (!result.IsSuccess)
         {

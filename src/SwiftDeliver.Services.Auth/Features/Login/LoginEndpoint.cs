@@ -13,7 +13,7 @@ public static class LoginEndpoint
         return endpoints;
     }
 
-    private static async Task<Results<Ok, ProblemHttpResult>> Handle(IMediator mediator, LoginEndpointCommand command,
+    private static async Task<Results<Ok, ProblemHttpResult>> Handle(IMediator mediator, LoginCommand command,
         HttpContext httpContext)
     {
         var result = await mediator.Send(command);

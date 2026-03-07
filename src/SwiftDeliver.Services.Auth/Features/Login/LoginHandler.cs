@@ -9,15 +9,15 @@ using SwiftDeliver.Auth.Common.Interfaces;
 
 namespace SwiftDeliver.Auth.Features.Login;
 
-public class LoginEndpointHandler : ICommandHandler<LoginEndpointCommand, Result<LoginEndpointTokens>>
+public class LoginHandler : ICommandHandler<LoginCommand, Result<LoginTokensDto>>
 {
     private readonly IDbConnection _connection;
-    private readonly ILogger<LoginEndpointHandler> _logger;
+    private readonly ILogger<LoginHandler> _logger;
     private readonly ITokenGenerator _tokenGenerator;
 
-    public LoginEndpointHandler(
+    public LoginHandler(
         IDbConnection connection, 
-        ILogger<LoginEndpointHandler> logger, 
+        ILogger<LoginHandler> logger, 
         ITokenGenerator tokenGenerator)
     {
         _connection = connection;
@@ -25,15 +25,15 @@ public class LoginEndpointHandler : ICommandHandler<LoginEndpointCommand, Result
         _tokenGenerator = tokenGenerator;
     }
 
-    public async ValueTask<Result<LoginEndpointTokens>> Handle(
-        LoginEndpointCommand command, 
+    public async ValueTask<Result<LoginTokensDto>> Handle(
+        LoginCommand command, 
         CancellationToken cancellationToken)
     {
         _connection.Open();
         
         var userDtoSql = "SELECT Id, Email, PasswordHash, PasswordSalt FROM Users WHERE Email = @Email";
         
-        var userDto = await _connection.QueryFirstOrDefaultAsync<LoginEndpointUserDto>(
+        var userDto = await _connection.QueryFirstOrDefaultAsync<LoginUserDto>(
             userDtoSql, 
             new { Email = command.Email });
         
@@ -94,7 +94,7 @@ public class LoginEndpointHandler : ICommandHandler<LoginEndpointCommand, Result
             
             transaction.Commit();
             
-            return Result.Ok(new LoginEndpointTokens(newAccessToken, newRefreshToken));
+            return Result.Ok(new LoginTokensDto(newAccessToken, newRefreshToken));
         }
         catch (Exception e)
         {
