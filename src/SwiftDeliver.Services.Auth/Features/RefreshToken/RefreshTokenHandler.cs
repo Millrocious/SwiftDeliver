@@ -21,15 +21,9 @@ public sealed class RefreshTokenHandler : ICommandHandler<RefreshTokenCommand, R
     public async ValueTask<Result<RefreshTokenTokens>> Handle(RefreshTokenCommand command, CancellationToken cancellationToken)
     {
         _connection.Open();
-        var getRefreshTokenSql = """
-                                 SELECT u.Id, u.Email 
-                                 FROM Users u 
-                                     INNER JOIN RefreshTokens rt ON u.Id = rt.UserId 
-                                 WHERE rt.Token = @Token
-                                 """;
 
         var result = await _connection.QuerySingleOrDefaultAsync<RefreshTokenUserDto>(
-            getRefreshTokenSql,
+            RefreshTokenQueries.GetRefreshTokenSql,
             new { Token = command.RefreshToken });
 
         if (result == null)
@@ -41,24 +35,15 @@ public sealed class RefreshTokenHandler : ICommandHandler<RefreshTokenCommand, R
 
         try
         {
-            var revokeOldRefreshTokenSql = """
-                                           UPDATE RefreshTokens SET IsRevoked = 1 WHERE Token = @Token
-                                           """;
-        
             await _connection.ExecuteAsync(
-                revokeOldRefreshTokenSql, 
+                RefreshTokenQueries.RevokeOldRefreshTokenSql, 
                 new { Token = command.RefreshToken },
                 transaction);
         
             var newRefreshToken = Guid.NewGuid().ToString();
-
-            var insertNewRefreshTokenSql = """
-                                           INSERT INTO RefreshTokens(Token, UserId, ExpiresAt) 
-                                           VALUES(@Token, @UserId, @ExpiresAt)
-                                           """;
-
+            
             await _connection.ExecuteAsync(
-                insertNewRefreshTokenSql,
+                RefreshTokenQueries.InsertNewRefreshTokenSql,
                 new
                 {
                     Token = newRefreshToken,
