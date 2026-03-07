@@ -30,14 +30,9 @@ public class RegisterHandler : ICommandHandler<RegisterCommand, Result<RegisterT
     {
         _connection.Open();
         using var transaction = _connection.BeginTransaction();
-
-        const string isUserExistsSql = """
-                                       SELECT IIF(EXISTS 
-                                           (SELECT 1 FROM Users WHERE Email = @Email), 1, 0)
-                                       """;
         
         var isUserExists = await _connection.ExecuteScalarAsync<bool>(
-            isUserExistsSql, 
+            RegisterQueries.IsUserExistsSql, 
             new { Email = command.Email },
             transaction);
 
@@ -59,15 +54,8 @@ public class RegisterHandler : ICommandHandler<RegisterCommand, Result<RegisterT
         
         try
         {
-            var createUserSql = """
-                      INSERT INTO Users(Email, PasswordHash, PasswordSalt, RoleId, CreatedAt) 
-                      OUTPUT INSERTED.Id
-                      SELECT @Email, @PasswordHash, @PasswordSalt, Id, @CreatedAt
-                      FROM Roles r 
-                      WHERE r.Name = 'Client'
-                      """;
-
-            var createdUserId = await _connection.QuerySingleAsync<Guid>(createUserSql,
+            var createdUserId = await _connection.QuerySingleAsync<Guid>(
+                RegisterQueries.CreateUserSql,
                 new
                 {
                     Email = command.Email, 
@@ -79,14 +67,9 @@ public class RegisterHandler : ICommandHandler<RegisterCommand, Result<RegisterT
 
             var accessToken = _tokenGenerator.GenerateToken(command.Email);
             var refreshToken = Guid.NewGuid().ToString();
-
-            const string insertRefreshTokenSql = """
-                                                 INSERT INTO RefreshTokens(UserId, Token, ExpiresAt)
-                                                 VALUES(@UserId, @Token, @ExpiresAt)
-                                                 """;
-        
+            
             await _connection.ExecuteAsync(
-                insertRefreshTokenSql, 
+                RegisterQueries.InsertRefreshTokenSql, 
                 new
                 {
                     UserId = createdUserId, 
