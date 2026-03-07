@@ -31,10 +31,8 @@ public class LoginHandler : ICommandHandler<LoginCommand, Result<LoginTokensDto>
     {
         _connection.Open();
         
-        var userDtoSql = "SELECT Id, Email, PasswordHash, PasswordSalt FROM Users WHERE Email = @Email";
-        
         var userDto = await _connection.QueryFirstOrDefaultAsync<LoginUserDto>(
-            userDtoSql, 
+            LoginQueries.UserDtoSql, 
             new { Email = command.Email });
         
         if (userDto is null)
@@ -63,14 +61,9 @@ public class LoginHandler : ICommandHandler<LoginCommand, Result<LoginTokensDto>
             }
             
             var newRefreshToken = Guid.NewGuid().ToString();
-            var insertNewRefreshTokenSql = """
-                                           INSERT INTO RefreshTokens(Token, UserId, ExpiresAt)
-                                           OUTPUT inserted.Id
-                                           VALUES(@Token, @UserId, @ExpiresAt)
-                                           """;
         
             var newRefreshTokenId = await _connection.ExecuteScalarAsync<Guid>(
-                insertNewRefreshTokenSql, 
+                LoginQueries.InsertNewRefreshTokenSql, 
                 new
                 {
                     Token = newRefreshToken, 
@@ -79,14 +72,8 @@ public class LoginHandler : ICommandHandler<LoginCommand, Result<LoginTokensDto>
                 },
                 transaction);
             
-            var revokeTokenSql = """
-                                 UPDATE RefreshTokens 
-                                 SET IsRevoked = 1 
-                                 WHERE UserId = @UserId AND Id != @Id
-                                 """;
-            
             await _connection.ExecuteAsync(
-                revokeTokenSql,
+                LoginQueries.RevokeTokenSql,
                 new { UserId = userDto.Id, Id = newRefreshTokenId },
                 transaction);
 
