@@ -17,7 +17,7 @@ public class TokenGenerator : ITokenGenerator
         _options = options.Value;
     }
     
-    public string GenerateToken(string email)
+    public string GenerateToken(string email, string userRoleName)
     {
        var secretKey = Encoding.UTF8.GetBytes(_options.SecretKey);
        var symmetricKey = new SymmetricSecurityKey(secretKey);
@@ -27,6 +27,7 @@ public class TokenGenerator : ITokenGenerator
            [JwtRegisteredClaimNames.Jti] = Guid.NewGuid().ToString(),
            [JwtRegisteredClaimNames.Sub] = email,
            [JwtRegisteredClaimNames.Email] = email,
+           ["role"] = userRoleName,
        };
 
        var securityTokenDescriptor = new SecurityTokenDescriptor()

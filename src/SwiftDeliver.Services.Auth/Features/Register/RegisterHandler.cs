@@ -16,8 +16,8 @@ public class RegisterHandler : ICommandHandler<RegisterCommand, Result<RegisterT
     private readonly ITokenGenerator _tokenGenerator;
 
     public RegisterHandler(
-        IDbConnection connection, 
-        ILogger<RegisterHandler> logger, 
+        IDbConnection connection,
+        ILogger<RegisterHandler> logger,
         ITokenGenerator tokenGenerator)
     {
         _connection = connection;
@@ -30,9 +30,9 @@ public class RegisterHandler : ICommandHandler<RegisterCommand, Result<RegisterT
     {
         _connection.Open();
         using var transaction = _connection.BeginTransaction();
-        
+
         var isUserExists = await _connection.ExecuteScalarAsync<bool>(
-            RegisterQueries.IsUserExistsSql, 
+            RegisterQueries.IsUserExistsSql,
             new { Email = command.Email },
             transaction);
 
@@ -41,7 +41,7 @@ public class RegisterHandler : ICommandHandler<RegisterCommand, Result<RegisterT
             _logger.LogInformation("User with email: {email} already exists", command.Email);
             return Result.Fail("User with this email already exists");
         }
-        
+
         var saltBytes = RandomNumberGenerator.GetBytes(128 / 8);
         var saltBase64 = Convert.ToBase64String(saltBytes);
 
@@ -51,36 +51,44 @@ public class RegisterHandler : ICommandHandler<RegisterCommand, Result<RegisterT
             prf: KeyDerivationPrf.HMACSHA256,
             iterationCount: 100000,
             numBytesRequested: 256 / 8));
-        
+
         try
         {
-            var createdUserId = await _connection.QuerySingleAsync<Guid>(
+            var createdUser = await _connection.QuerySingleAsync<RegisterUserDto>(
                 RegisterQueries.CreateUserSql,
                 new
                 {
-                    Email = command.Email, 
-                    PasswordHash = hashed, 
-                    PasswordSalt = saltBase64, 
+                    Email = command.Email,
+                    PasswordHash = hashed,
+                    PasswordSalt = saltBase64,
                     CreatedAt = DateTime.UtcNow
-                }, 
+                },
                 transaction);
 
-            var accessToken = _tokenGenerator.GenerateToken(command.Email);
-            var refreshToken = Guid.NewGuid().ToString();
-            
-            await _connection.ExecuteAsync(
-                RegisterQueries.InsertRefreshTokenSql, 
+            var userRoleName = await _connection.QuerySingleAsync<string>(
+                RegisterQueries.UserRoleSql,
                 new
                 {
-                    UserId = createdUserId, 
-                    Token = refreshToken, 
-                    ExpiresAt = DateTime.UtcNow.AddMilliseconds(AuthConstants.RefreshTokenExpirationMs)
-                }, 
+                    RoleId = createdUser.RoleId,
+                },
                 transaction);
-            
+
+            var accessToken = _tokenGenerator.GenerateToken(command.Email, userRoleName);
+            var refreshToken = Guid.NewGuid().ToString();
+
+            await _connection.ExecuteAsync(
+                RegisterQueries.InsertRefreshTokenSql,
+                new
+                {
+                    UserId = createdUser.Id,
+                    Token = refreshToken,
+                    ExpiresAt = DateTime.UtcNow.AddMilliseconds(AuthConstants.RefreshTokenExpirationMs)
+                },
+                transaction);
+
             transaction.Commit();
-            
-            return Result.Ok(new RegisterTokensDto(createdUserId, accessToken, refreshToken));
+
+            return Result.Ok(new RegisterTokensDto(createdUser.Id, accessToken, refreshToken));
         }
         catch (Exception e)
         {

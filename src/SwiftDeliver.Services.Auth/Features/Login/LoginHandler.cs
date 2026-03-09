@@ -40,7 +40,6 @@ public class LoginHandler : ICommandHandler<LoginCommand, Result<LoginTokensDto>
             return Result.Fail("User not found");
         }
         
-        
         using var transaction = _connection.BeginTransaction();
         
         try
@@ -76,8 +75,16 @@ public class LoginHandler : ICommandHandler<LoginCommand, Result<LoginTokensDto>
                 LoginQueries.RevokeTokenSql,
                 new { UserId = userDto.Id, Id = newRefreshTokenId },
                 transaction);
+            
+            var userRoleName = await _connection.QuerySingleAsync<string>(
+                LoginQueries.UserRoleSql,
+                new
+                {
+                    RoleId = userDto.RoleId
+                },
+                transaction);
 
-            var newAccessToken = _tokenGenerator.GenerateToken(userDto.Email);
+            var newAccessToken = _tokenGenerator.GenerateToken(userDto.Email, userRoleName);
             
             transaction.Commit();
             

@@ -51,8 +51,16 @@ public sealed class RefreshTokenHandler : ICommandHandler<RefreshTokenCommand, R
                     ExpiresAt = DateTime.UtcNow.AddMilliseconds(AuthConstants.RefreshTokenExpirationMs)
                 },
                 transaction);
+            
+            var userRoleName = await _connection.QuerySingleAsync<string>(
+                RefreshTokenQueries.UserRoleSql,
+                new
+                {
+                    RoleId = result.RoleId
+                },
+                transaction);
         
-            var newAccessToken = _tokenGenerator.GenerateToken(result.Email);
+            var newAccessToken = _tokenGenerator.GenerateToken(result.Email, userRoleName);
         
             transaction.Commit();
             

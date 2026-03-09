@@ -9,7 +9,7 @@ public static class RegisterQueries
 
     public const string CreateUserSql = """
                                         INSERT INTO Users(Email, PasswordHash, PasswordSalt, RoleId, CreatedAt) 
-                                        OUTPUT INSERTED.Id
+                                        OUTPUT INSERTED.Id, INSERTED.RoleId
                                         SELECT @Email, @PasswordHash, @PasswordSalt, Id, @CreatedAt
                                         FROM Roles r 
                                         WHERE r.Name = 'Client'
@@ -19,4 +19,9 @@ public static class RegisterQueries
                                                 INSERT INTO RefreshTokens(UserId, Token, ExpiresAt)
                                                 VALUES(@UserId, @Token, @ExpiresAt)
                                                 """;
+
+    public const string UserRoleSql = """
+                                      SELECT r.Name FROM Roles r
+                                      WHERE r.Id = @RoleId
+                                      """;
 }
